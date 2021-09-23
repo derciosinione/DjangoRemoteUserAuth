@@ -3,15 +3,15 @@ from django.db.models import Q
 
 
 class EmailBackend(ModelBackend):
-    def authenticate(self, request, username=None, password=None, **kwargs):
+    def authenticate(self, request, **kwargs):
         try: 
-          user = UserModel.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+          user = UserModel.objects.get(Q(username__iexact=kwargs.get('username')) | Q(email__iexact=kwargs.get('username')))
         except UserModel.DoesNotExist:
-          UserModel().set_password(password)
+          UserModel().set_password(kwargs.get('password'))
         except UserModel.MultipleObjectsReturned:
-          return UserModel.objects.filter(email=username).order_by('id').first()
+          return UserModel.objects.filter(email=kwargs.get('username')).order_by('id').first()
         else:
-          if user.check_password(password) and self.user_can_authenticate(user):
+          if user.check_password(kwargs.get('password')) and self.user_can_authenticate(user):
             return user
 
     def get_user(self, user_id):
